@@ -10,13 +10,13 @@ Estado actual: inception local. No hay release, no hay remoto y no hay promesas 
 
 ## Límites v0.1
 
-- Read-only por defecto.
-- Sin red.
-- Sin LLM.
-- Sin ejecutar comandos del repositorio analizado.
-- Sin modificar archivos salvo modo explícito futuro.
-- Sin prometer seguridad total.
-- Hallazgos de secretos siempre redactados.
+- read-only by default; read-only por defecto.
+- no network access; sin red.
+- no LLM dependency; sin LLM.
+- does not execute commands from analyzed repositories; sin ejecutar comandos del repositorio analizado.
+- no file modifications unless a future explicit write mode is implemented.
+- no security guarantees; it is not a security scanner.
+- secret-like findings are always redacted.
 
 ## Licencia
 
