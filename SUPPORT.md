@@ -1,8 +1,8 @@
 # Support Policy
 
-agent-rules-kit is currently in local inception and has no public release.
+agent-rules-kit is a pre-release public project with no stable release yet.
 
-There is no formal support channel yet.
+There is no guaranteed support response time.
 
 ## Current status
 
@@ -10,7 +10,7 @@ This project is pre-release software.
 
 At this stage:
 
-- no public release exists;
+- no stable public release exists;
 - no stability guarantee exists;
 - no support response time is promised;
 - no production readiness is claimed;
@@ -19,8 +19,6 @@ At this stage:
 ## What this project is
 
 agent-rules-kit is a local Python CLI for diagnosing baseline quality of AI agent instruction files in repositories.
-
-It is not a security scanner.
 
 It is intended to help detect missing, weak, duplicated, or risky instruction patterns.
 
@@ -74,9 +72,11 @@ The following requests are out of scope unless a maintainer explicitly approves 
 
 Security-sensitive reports should follow SECURITY.md.
 
-Before public release, the maintainer must define whether GitHub Security Advisories are enabled and what contact channel should be used.
+For non-sensitive security boundary issues, open a GitHub issue with a minimal reproduction.
 
-Until that is defined, do not claim that this project has a formal vulnerability disclosure process.
+Do not include secrets, tokens, credentials, cookies, private URLs, customer data, or sensitive repository contents in public issues.
+
+Before a stable public release, the maintainer must define whether GitHub Security Advisories are enabled and what private contact channel should be used.
 
 ## Maintainer note
 

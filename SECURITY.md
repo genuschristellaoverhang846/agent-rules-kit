@@ -21,9 +21,12 @@ The project must preserve these boundaries:
 - no network access in runtime behavior;
 - no LLM dependency in runtime behavior;
 - no execution of commands from analyzed repositories;
-- no modification of analyzed repositories unless a future explicit write mode is intentionally designed;
+- no unsupported security claims;
 - no printing of raw secrets;
-- no unsupported security claims.
+- no file modification during `check`;
+- no file modification during `init --dry-run`;
+- file modification only through explicit `init --write` user intent;
+- existing root `AGENTS.md` must be backed up before replacement.
 
 ## Secret handling
 
@@ -35,11 +38,13 @@ Use fake examples only.
 
 ## Reporting a vulnerability
 
-This repository is currently in local inception and has no public release.
+This repository is public but has no stable release and no formal private vulnerability disclosure process yet.
 
-Before public release, a reporting channel must be defined.
+For non-sensitive security boundary issues, open a GitHub issue with a minimal reproduction.
 
-Until then, do not claim that the project has a formal vulnerability disclosure process.
+Do not include secrets, tokens, credentials, cookies, private URLs, customer data, or sensitive repository contents in public issues.
+
+Before a stable public release, the maintainer must define a private reporting channel or enable GitHub Security Advisories.
 
 ## Non-goals
 
@@ -50,11 +55,14 @@ agent-rules-kit does not aim to:
 - scan dependencies for vulnerabilities;
 - validate CI/CD supply chain security;
 - execute repository commands to confirm behavior;
-- inspect private services, credentials, or infrastructure.
+- inspect private services, credentials, or infrastructure;
+- provide complete secret scanning.
 
 ## Maintainer response
 
-Before a public release, the maintainer must define:
+There is no guaranteed security response time before a stable release.
+
+Before a stable public release, the maintainer must define:
 
 - contact channel;
 - expected response time;
