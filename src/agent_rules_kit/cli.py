@@ -12,7 +12,7 @@ from agent_rules_kit import __version__
 from agent_rules_kit.discovery import InstructionFile, discover_instruction_files
 from agent_rules_kit.redaction import redact_secret_like_values
 
-OUTPUT_FORMATS = ("console", "json")
+OUTPUT_FORMATS = ("console", "json", "markdown")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -69,34 +69,28 @@ def _run_check(repository_root: Path, *, output_format: str = "console") -> int:
     try:
         instruction_files = discover_instruction_files(repository_root)
     except ValueError as error:
-        message = redact_secret_like_values(str(error))
+        payload = _build_check_error_payload(repository_root, error)
 
         if output_format == "json":
-            _print_json(
-                {
-                    "command": "check",
-                    "status": "error",
-                    "repository": redact_secret_like_values(str(repository_root)),
-                    "instruction_files": [],
-                    "summary": {
-                        "supported_instruction_file_count": 0,
-                    },
-                    "error": {
-                        "message": message,
-                    },
-                }
-            )
+            _print_json(payload)
+        elif output_format == "markdown":
+            _print_markdown(payload)
         else:
-            print(f"ERROR: {message}", file=sys.stderr)
+            print(f"ERROR: {payload['error']['message']}", file=sys.stderr)
 
         return 2
 
-    if output_format == "json":
-        status = "ok" if instruction_files else "no_instruction_files"
-        _print_json(_build_check_payload(repository_root, instruction_files, status=status))
-        return 0 if instruction_files else 1
+    status = "ok" if instruction_files else "no_instruction_files"
+    payload = _build_check_payload(repository_root, instruction_files, status=status)
 
-    return _print_console_check(repository_root, instruction_files)
+    if output_format == "json":
+        _print_json(payload)
+    elif output_format == "markdown":
+        _print_markdown(payload)
+    else:
+        return _print_console_check(repository_root, instruction_files)
+
+    return 0 if instruction_files else 1
 
 
 def _print_console_check(
@@ -140,8 +134,61 @@ def _build_check_payload(
     }
 
 
+def _build_check_error_payload(
+    repository_root: Path,
+    error: ValueError,
+) -> dict[str, object]:
+    return {
+        "command": "check",
+        "status": "error",
+        "repository": redact_secret_like_values(str(repository_root)),
+        "instruction_files": [],
+        "summary": {
+            "supported_instruction_file_count": 0,
+        },
+        "error": {
+            "message": redact_secret_like_values(str(error)),
+        },
+    }
+
+
 def _print_json(payload: dict[str, object]) -> None:
     print(json.dumps(payload, indent=2, sort_keys=True))
+
+
+def _print_markdown(payload: dict[str, object]) -> None:
+    print("# agent-rules-kit check")
+    print()
+    print(f"- Repository: {_markdown_value(str(payload['repository']))}")
+    print(f"- Status: {_markdown_value(str(payload['status']))}")
+    print(
+        "- Supported instruction files: "
+        f"{payload['summary']['supported_instruction_file_count']}"
+    )
+
+    error = payload["error"]
+    if error is not None:
+        print()
+        print(f"Error: {_markdown_value(str(error['message']))}")
+        return
+
+    instruction_files = payload["instruction_files"]
+    if not instruction_files:
+        print()
+        print("No supported agent instruction files found.")
+        return
+
+    print()
+    print("| Path | Kind |")
+    print("| --- | --- |")
+    for instruction_file in instruction_files:
+        path = _markdown_value(str(instruction_file["path"]))
+        kind = _markdown_value(str(instruction_file["kind"]))
+        print(f"| {path} | {kind} |")
+
+
+def _markdown_value(value: str) -> str:
+    return redact_secret_like_values(value).replace("|", "\\|").replace("\n", " ")
 
 
 if __name__ == "__main__":

@@ -177,6 +177,98 @@ class CliTests(unittest.TestCase):
         self.assertNotIn(secret_like_path.name, text)
         self.assertEqual(payload["status"], "error")
 
+    def test_check_reports_discovered_instruction_files_as_markdown(self) -> None:
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check",
+                    str(FIXTURE_ROOT / "multi-agent-overlap"),
+                    "--format",
+                    "markdown",
+                ]
+            )
+
+        text = output.getvalue()
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("# agent-rules-kit check", text)
+        self.assertIn("- Status: ok", text)
+        self.assertIn("- Supported instruction files: 6", text)
+        self.assertIn("| Path | Kind |", text)
+        self.assertIn("| AGENTS.md | agents |", text)
+        self.assertIn("| CLAUDE.md | claude |", text)
+        self.assertIn("| GEMINI.md | gemini |", text)
+        self.assertIn("| .cursor/rules/agent-rules.mdc | cursor-rule |", text)
+        self.assertIn("| .github/copilot-instructions.md | copilot |", text)
+        self.assertIn(
+            "| .github/instructions/agents.instructions.md | github-instruction |",
+            text,
+        )
+
+    def test_check_markdown_returns_one_when_no_instruction_files_are_found(self) -> None:
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check",
+                    str(FIXTURE_ROOT / "empty-repo"),
+                    "--format",
+                    "markdown",
+                ]
+            )
+
+        text = output.getvalue()
+
+        self.assertEqual(exit_code, 1)
+        self.assertIn("# agent-rules-kit check", text)
+        self.assertIn("- Status: no_instruction_files", text)
+        self.assertIn("- Supported instruction files: 0", text)
+        self.assertIn("No supported agent instruction files found.", text)
+
+    def test_check_markdown_returns_two_for_invalid_repository_root(self) -> None:
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check",
+                    str(FIXTURE_ROOT / "missing-repo"),
+                    "--format",
+                    "markdown",
+                ]
+            )
+
+        text = output.getvalue()
+
+        self.assertEqual(exit_code, 2)
+        self.assertIn("# agent-rules-kit check", text)
+        self.assertIn("- Status: error", text)
+        self.assertIn("Error: repository root does not exist:", text)
+
+    def test_check_markdown_redacts_secret_like_repository_values(self) -> None:
+        output = io.StringIO()
+        secret_like_path = FIXTURE_ROOT / ("ghp_" + ("B" * 36))
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "check",
+                    str(secret_like_path),
+                    "--format",
+                    "markdown",
+                ]
+            )
+
+        text = output.getvalue()
+
+        self.assertEqual(exit_code, 2)
+        self.assertIn("[REDACTED]", text)
+        self.assertNotIn(secret_like_path.name, text)
+        self.assertIn("- Status: error", text)
+
 
 if __name__ == "__main__":
     unittest.main()
