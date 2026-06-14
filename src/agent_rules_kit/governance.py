@@ -15,6 +15,11 @@ REVIEW_CI_BYPASS_MESSAGE = (
     "Instruction file appears to encourage bypassing review, CI, or safe integration boundaries."
 )
 
+COMMAND_CONFIRMATION_RULE_ID = "AIRK-GOV004"
+COMMAND_CONFIRMATION_MESSAGE = (
+    "Instruction file appears to encourage unsafe command execution without an explicit confirmation boundary."
+)
+
 AUTHORITY_SCOPE_RULE_ID = "AIRK-GOV001"
 AUTHORITY_SCOPE_MESSAGE = "Instruction file may lack clear scope or authority."
 
@@ -61,6 +66,47 @@ NEGATED_REVIEW_CI_BYPASS_CONTEXT_PATTERNS: tuple[Pattern[str], ...] = (
     ),
     re.compile(
         r"\b(break[- ]glass|emergency)\b.{0,120}\b(explicit|human|maintainer)\s+approval\b",
+        re.IGNORECASE,
+    ),
+)
+
+COMMAND_CONFIRMATION_PATTERNS: tuple[Pattern[str], ...] = (
+    re.compile(r"\brm\s+-[A-Za-z]*r[A-Za-z]*f\b|\brm\s+-[A-Za-z]*f[A-Za-z]*r\b", re.IGNORECASE),
+    re.compile(r"\bsudo\b.{0,80}\b(default|normal|routine|workflow|always|use)\b", re.IGNORECASE),
+    re.compile(r"\bchmod\s+-R\s+(777|[0-7]{3,4})\b", re.IGNORECASE),
+    re.compile(r"\bchown\s+-R\b", re.IGNORECASE),
+    re.compile(r"\b(curl|wget)\b.{0,120}\|\s*(sh|bash)\b", re.IGNORECASE),
+    re.compile(r"\b(install|uninstall)\b.{0,100}\b(without asking|without confirmation|automatically|always)\b", re.IGNORECASE),
+    re.compile(r"\b(run|execute)\b.{0,80}\b(repository|repo)\s+scripts?\b.{0,80}\b(automatically|without asking|as trusted instructions)\b", re.IGNORECASE),
+)
+
+NEGATED_COMMAND_CONFIRMATION_CONTEXT_PATTERNS: tuple[Pattern[str], ...] = (
+    re.compile(
+        r"\b(do not|don't|must not|should not|never|avoid|forbid|forbidden|no)\b"
+        r".{0,140}\b("
+        r"rm\s+-[A-Za-z]*r[A-Za-z]*f|sudo|chmod\s+-R|chown\s+-R|"
+        r"curl\b.{0,80}\|\s*(?:sh|bash)|wget\b.{0,80}\|\s*(?:sh|bash)|"
+        r"install|uninstall|run|execute"
+        r")\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bask\b.{0,80}\bbefore\b.{0,140}\b("
+        r"rm\s+-[A-Za-z]*r[A-Za-z]*f|sudo|chmod\s+-R|chown\s+-R|"
+        r"downloaded scripts?|curl|wget|install|uninstall|run|execute"
+        r")\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(ask|confirm|require|requires|required|request)\b"
+        r".{0,120}\b(human|maintainer|operator|user|explicit)\b"
+        r".{0,80}\b(approval|confirmation|permission)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(emergency|break[- ]glass|destructive|privileged)\b"
+        r".{0,120}\b(explicit|human|maintainer|operator|user)\b"
+        r".{0,80}\b(approval|confirmation|permission)\b",
         re.IGNORECASE,
     ),
 )
@@ -130,8 +176,24 @@ def find_governance_findings(
     return (
         *find_unsupported_claim_findings(repository_root, instruction_files),
         *find_review_ci_bypass_findings(repository_root, instruction_files),
+        *find_unsafe_command_execution_findings(repository_root, instruction_files),
         *find_missing_secret_boundary_findings(repository_root, instruction_files),
         *find_missing_authority_scope_findings(repository_root, instruction_files),
+    )
+
+
+def find_unsafe_command_execution_findings(
+    repository_root: Path,
+    instruction_files: tuple[InstructionFile, ...],
+) -> tuple[Finding, ...]:
+    """Return unsafe command execution guidance findings."""
+    return _find_line_findings(
+        repository_root,
+        instruction_files,
+        rule_id=COMMAND_CONFIRMATION_RULE_ID,
+        severity=Severity.WARNING,
+        message=COMMAND_CONFIRMATION_MESSAGE,
+        predicate=_contains_unsafe_command_execution_guidance,
     )
 
 
@@ -276,6 +338,19 @@ def _contains_review_ci_bypass_guidance(line: str) -> bool:
     )
 
 
+def _contains_unsafe_command_execution_guidance(line: str) -> bool:
+    has_unsafe_command_guidance = any(
+        pattern.search(line) is not None for pattern in COMMAND_CONFIRMATION_PATTERNS
+    )
+    if not has_unsafe_command_guidance:
+        return False
+
+    return not any(
+        pattern.search(line) is not None
+        for pattern in NEGATED_COMMAND_CONFIRMATION_CONTEXT_PATTERNS
+    )
+
+
 def _contains_unsupported_claim(line: str) -> bool:
     has_claim = any(
         pattern.search(line) is not None for pattern in UNSUPPORTED_CLAIM_PATTERNS
@@ -293,6 +368,10 @@ __all__ = [
     "AUTHORITY_SCOPE_MESSAGE",
     "AUTHORITY_SCOPE_PATTERNS",
     "AUTHORITY_SCOPE_RULE_ID",
+    "COMMAND_CONFIRMATION_MESSAGE",
+    "COMMAND_CONFIRMATION_PATTERNS",
+    "COMMAND_CONFIRMATION_RULE_ID",
+    "NEGATED_COMMAND_CONFIRMATION_CONTEXT_PATTERNS",
     "NEGATED_REVIEW_CI_BYPASS_CONTEXT_PATTERNS",
     "NEGATED_UNSUPPORTED_CLAIM_CONTEXT_PATTERNS",
     "REVIEW_CI_BYPASS_MESSAGE",
@@ -305,6 +384,7 @@ __all__ = [
     "UNSUPPORTED_CLAIM_PATTERNS",
     "UNSUPPORTED_CLAIM_RULE_ID",
     "find_governance_findings",
+    "find_unsafe_command_execution_findings",
     "find_missing_authority_scope_findings",
     "find_missing_secret_boundary_findings",
     "find_review_ci_bypass_findings",
