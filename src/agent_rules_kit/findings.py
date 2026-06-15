@@ -28,6 +28,7 @@ class Finding:
     path: str | None = None
     line: int | None = None
     column: int | None = None
+    evidence: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.severity, Severity):
@@ -50,6 +51,12 @@ class Finding:
                 raise ValueError("path must not be blank when provided")
             object.__setattr__(self, "path", normalized_path)
 
+        if self.evidence is not None:
+            normalized_evidence = self.evidence.strip()
+            if not normalized_evidence:
+                raise ValueError("evidence must not be blank when provided")
+            object.__setattr__(self, "evidence", normalized_evidence)
+
         if self.line is not None and self.line < 1:
             raise ValueError("line must be greater than or equal to 1")
         if self.column is not None and self.column < 1:
@@ -69,6 +76,8 @@ class Finding:
             data["line"] = self.line
         if self.column is not None:
             data["column"] = self.column
+        if self.evidence is not None:
+            data["evidence"] = self.evidence
 
         return data
 

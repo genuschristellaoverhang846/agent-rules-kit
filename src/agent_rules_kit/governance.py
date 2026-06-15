@@ -381,6 +381,7 @@ def _find_line_findings(
                         message=message,
                         path=instruction_file.path,
                         line=line_number,
+                        evidence=line,
                     )
                 )
 
